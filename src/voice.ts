@@ -1,5 +1,3 @@
-import { pipeline } from "@huggingface/transformers";
-import { KokoroTTS } from "kokoro-js";
 
 type Progress = (message: string) => void;
 let asrPromise: Promise<any> | null = null;
@@ -11,6 +9,7 @@ function bestDevice(): "webgpu" | "wasm" {
 
 export async function transcribeRecording(blob: Blob, onProgress: Progress = () => {}) {
   if (!asrPromise) {
+    const { pipeline } = await import("@huggingface/transformers");
     const device = bestDevice();
     asrPromise = pipeline(
       "automatic-speech-recognition",
@@ -54,6 +53,7 @@ export async function transcribeRecording(blob: Blob, onProgress: Progress = () 
 
 export async function synthesizeSpeech(text: string, voice: string, onProgress: Progress = () => {}) {
   if (!ttsPromise) {
+    const { KokoroTTS } = await import("kokoro-js");
     const device = bestDevice();
     ttsPromise = KokoroTTS.from_pretrained("onnx-community/Kokoro-82M-v1.0-ONNX", {
       dtype: device === "webgpu" ? "fp32" : "q8",
