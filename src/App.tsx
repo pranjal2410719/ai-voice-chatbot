@@ -9,9 +9,9 @@ const welcome: Message = { id: 1, role: "assistant", text: "Hey! I'm Vox, your v
 
 export default function App() {
  const [messages,setMessages]=useState<Message[]>([welcome]), [input,setInput]=useState(""), [listening,setListening]=useState(false), [transcribing,setTranscribing]=useState(false), [thinking,setThinking]=useState(false), [speakingId,setSpeakingId]=useState<number|null>(null), [paused,setPaused]=useState(false), [autoSpeak,setAutoSpeak]=useState(true), [showSettings,setShowSettings]=useState(false), [apiKey,setApiKey]=useState(()=>localStorage.getItem("vox_gemini_key")||""), [draftKey,setDraftKey]=useState(apiKey), [interim,setInterim]=useState(""), [error,setError]=useState(""), [voice,setVoice]=useState("af_heart"), [voiceStatus,setVoiceStatus]=useState("");
- const recognition=useRef<Recognition|null>(null); const bottom=useRef<HTMLDivElement>(null); const interactionId=useRef<string|null>(null);
+ const recorderRef=useRef<MediaRecorder|null>(null); const audioRef=useRef<HTMLAudioElement|null>(null); const bottom=useRef<HTMLDivElement>(null); const interactionId=useRef<string|null>(null);
  useEffect(()=>{bottom.current?.scrollIntoView({behavior:"smooth"})},[messages,thinking]);
- useEffect(()=>()=>{recognition.current?.stop();window.speechSynthesis?.cancel()},[]);
+ useEffect(()=>()=>{recorderRef.current?.stream.getTracks().forEach(t=>t.stop());audioRef.current?.pause()},[]);
  function stopSpeaking(){window.speechSynthesis.cancel();setSpeakingId(null);setPaused(false)}
  function speak(text:string,id:number){if(!("speechSynthesis" in window)){setError("Speech playback is not supported in this browser.");return} stopSpeaking();const u=new SpeechSynthesisUtterance(text);const voices=window.speechSynthesis.getVoices();const v=voice==="default"?voices.find(x=>x.lang.startsWith("en")):voices.find(x=>x.name===voice);if(v)u.voice=v;u.onstart=()=>{setSpeakingId(id);setPaused(false)};u.onend=()=>{setSpeakingId(null);setPaused(false)};u.onerror=()=>setSpeakingId(null);window.speechSynthesis.speak(u)}
  function togglePause(){if(window.speechSynthesis.paused){window.speechSynthesis.resume();setPaused(false)}else{window.speechSynthesis.pause();setPaused(true)}}
