@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { AudioLines, Bot, Check, KeyRound, Mic, MicOff, Pause, Play, Plus, Send, Settings2, Sparkles, Square, Volume2, VolumeX, X } from "lucide-react";
+import { synthesizeSpeech, transcribeRecording } from "./voice";
+import { AudioLines, Bot, Check, KeyRound, Mic, MicOff, Pause, Play, Plus, Send, Settings2, Sparkles, Square, Volume2, VolumeX, X, LoaderCircle } from "lucide-react";
 
 type Message = { id: number; role: "user" | "assistant"; text: string; time: string };
 type Recognition = { lang: string; interimResults: boolean; continuous: boolean; onresult: ((event: any) => void) | null; onerror: (() => void) | null; onend: (() => void) | null; start: () => void; stop: () => void };
@@ -7,7 +8,7 @@ declare global { interface Window { SpeechRecognition?: new () => Recognition; w
 const welcome: Message = { id: 1, role: "assistant", text: "Hey! I'm Vox, your voice-first AI companion. Ask me anything by typing or tapping the microphone. I'll listen, think, and speak my answer.", time: "JUST NOW" };
 
 export default function App() {
- const [messages,setMessages]=useState<Message[]>([welcome]), [input,setInput]=useState(""), [listening,setListening]=useState(false), [thinking,setThinking]=useState(false), [speakingId,setSpeakingId]=useState<number|null>(null), [paused,setPaused]=useState(false), [autoSpeak,setAutoSpeak]=useState(true), [showSettings,setShowSettings]=useState(false), [apiKey,setApiKey]=useState(()=>localStorage.getItem("vox_gemini_key")||""), [draftKey,setDraftKey]=useState(apiKey), [interim,setInterim]=useState(""), [error,setError]=useState(""), [voice,setVoice]=useState("default");
+ const [messages,setMessages]=useState<Message[]>([welcome]), [input,setInput]=useState(""), [listening,setListening]=useState(false), [transcribing,setTranscribing]=useState(false), [thinking,setThinking]=useState(false), [speakingId,setSpeakingId]=useState<number|null>(null), [paused,setPaused]=useState(false), [autoSpeak,setAutoSpeak]=useState(true), [showSettings,setShowSettings]=useState(false), [apiKey,setApiKey]=useState(()=>localStorage.getItem("vox_gemini_key")||""), [draftKey,setDraftKey]=useState(apiKey), [interim,setInterim]=useState(""), [error,setError]=useState(""), [voice,setVoice]=useState("af_heart"), [voiceStatus,setVoiceStatus]=useState("");
  const recognition=useRef<Recognition|null>(null); const bottom=useRef<HTMLDivElement>(null); const interactionId=useRef<string|null>(null);
  useEffect(()=>{bottom.current?.scrollIntoView({behavior:"smooth"})},[messages,thinking]);
  useEffect(()=>()=>{recognition.current?.stop();window.speechSynthesis?.cancel()},[]);
